@@ -1,0 +1,104 @@
+VisualElement {
+}
+
+.button {
+    -unity-font-style: normal;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 20px;
+    border-bottom-left-radius: 20px;
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+    border-left-color: rgb(233, 129, 0);
+    border-right-color: rgb(233, 129, 0);
+    border-top-color: rgb(233, 129, 0);
+    border-bottom-color: rgb(233, 129, 0);
+    background-color: rgb(51, 51, 51);
+    color: rgb(255, 255, 255);
+    -unity-font-definition: url("project://database/Assets/Fonts/SairaCondensed-Black.ttf?fileID=12800000&guid=0fc9bd805b96c5c49a80a03dff3f9a7d&type=3#SairaCondensed-Black");
+    font-size: 45px;
+    margin-bottom: 0;
+    margin-top: 10px;
+    align-self: stretch;
+    -unity-text-align: middle-center;
+    letter-spacing: 0;
+    -unity-text-outline-width: 0;
+}
+
+.bombLabel {
+    font-size: 81px;
+    -unity-font-style: normal;
+    color: rgb(255, 255, 255);
+    align-items: stretch;
+    justify-content: center;
+    align-self: center;
+    -unity-font-definition: url("project://database/Assets/Fonts/BebasNeue-Regular.ttf?fileID=12800000&guid=eaa62bfb0318823418052dd695191303&type=3#BebasNeue-Regular");
+}
+
+.bomb {
+    justify-content: flex-start;
+    align-items: center;
+    border-top-width: 0.3px;
+    border-right-width: 0.3px;
+    border-bottom-width: 0.3px;
+    border-left-width: 0.3px;
+    border-left-color: rgb(12, 12, 12);
+    border-right-color: rgb(12, 12, 12);
+    border-top-color: rgb(12, 12, 12);
+    border-bottom-color: rgb(12, 12, 12);
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+
+
+
+.button:active {
+    -unity-font-style: bold;
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    border-bottom-right-radius: 18px;
+    border-bottom-left-radius: 18px;
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+    border-left-color: rgb(233, 129, 0);
+    border-right-color: rgb(233, 129, 0);
+    border-top-color: rgb(233, 129, 0);
+    border-bottom-color: rgb(233, 129, 0);
+    background-color: rgb(99, 99, 99);
+    color: rgb(255, 255, 255);
+    -unity-font-definition: url("project://database/Assets/Fonts/SairaCondensed-Thin.ttf?fileID=12800000&guid=1c2c54493d8bb864c80a706b46fab414&type=3#SairaCondensed-Thin");
+    font-size: 42px;
+    margin-bottom: 0;
+    margin-top: 10px;
+    align-self: stretch;
+    -unity-text-align: middle-center;
+    letter-spacing: 0;
+    scale: 0.9 1 0.9;
+    transition-duration: 0.05s;
+    transition-timing-function: ease-in-sine;
+    transition-delay: 0s;
+}
+
+VisualElement > #DefuseMenu > #Verification > #DefuseCodeField > #unity-text-input {
+    -unity-font-definition: url("project://database/Assets/Fonts/SairaCondensed-Black.ttf?fileID=12800000&guid=0fc9bd805b96c5c49a80a03dff3f9a7d&type=3#SairaCondensed-Black");
+    font-size: 50px;
+    -unity-text-align: middle-center;
+    color: rgb(255, 255, 255);
+    -unity-font-style: normal;
+    background-color: rgb(14, 14, 14);
+}
+
+VisualElement > #BombLoadMenu > #Verification > #BombInitCodeField > #unity-text-input {
+    font-size: 63px;
+    flex-grow: 1;
+    -unity-font-definition: url("project://database/Assets/Fonts/SairaCondensed-SemiBold.ttf?fileID=12800000&guid=2ddaa8f83e458764a83750b8c76bb746&type=3#SairaCondensed-SemiBold");
+    -unity-text-align: middle-center;
+    background-color: rgb(51, 51, 51);
+    color: rgb(255, 255, 255);
+}
