@@ -19,8 +19,6 @@ VisualElement {
     color: rgb(255, 255, 255);
     -unity-font-definition: url("project://database/Assets/Fonts/SairaCondensed-Black.ttf?fileID=12800000&guid=0fc9bd805b96c5c49a80a03dff3f9a7d&type=3#SairaCondensed-Black");
     font-size: 45px;
-    margin-bottom: 0;
-    margin-top: 10px;
     align-self: stretch;
     -unity-text-align: middle-center;
     letter-spacing: 0;
@@ -54,8 +52,6 @@ VisualElement {
     border-bottom-left-radius: 10px;
 }
 
-
-
 .button:active {
     -unity-font-style: bold;
     border-top-left-radius: 18px;
@@ -87,11 +83,15 @@ VisualElement {
 
 VisualElement > #DefuseMenu > #Verification > #DefuseCodeField > #unity-text-input {
     -unity-font-definition: url("project://database/Assets/Fonts/SairaCondensed-Black.ttf?fileID=12800000&guid=0fc9bd805b96c5c49a80a03dff3f9a7d&type=3#SairaCondensed-Black");
-    font-size: 50px;
+    font-size: 60px;
     -unity-text-align: middle-center;
-    color: rgb(255, 255, 255);
+    color: rgb(242, 246, 208);
     -unity-font-style: normal;
     background-color: rgb(14, 14, 14);
+    letter-spacing: 50px;
+    word-spacing: 0;
+    text-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    -unity-text-outline-width: 0;
 }
 
 VisualElement > #BombLoadMenu > #Verification > #BombInitCodeField > #unity-text-input {
@@ -101,4 +101,15 @@ VisualElement > #BombLoadMenu > #Verification > #BombInitCodeField > #unity-text
     -unity-text-align: middle-center;
     background-color: rgb(51, 51, 51);
     color: rgb(255, 255, 255);
+}
+
+VisualElement > #TeamNameMenu > #Verification > #TeamNameField > #unity-text-input {
+    font-size: 130px;
+    flex-grow: 1;
+    -unity-font-definition: url("project://database/Assets/Fonts/SairaCondensed-SemiBold.ttf?fileID=12800000&guid=2ddaa8f83e458764a83750b8c76bb746&type=3#SairaCondensed-SemiBold");
+    -unity-text-align: middle-center;
+    background-color: rgb(24, 24, 24);
+    color: rgb(242, 246, 208);
+    align-self: stretch;
+    align-items: center;
 }

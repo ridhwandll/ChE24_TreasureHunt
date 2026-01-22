@@ -47,24 +47,25 @@ public class ProgressMenuBombDisplay
 public class BombsSaveData
 {
     public BombSaveData[] bombs;
+    public string teamName;
 }
 
 public class THManager : MonoBehaviour
 {
+    [SerializeField] private AudioSource _audioSource;
     [SerializeField] private UIDocument Document;
     private VisualElement _bigRoot;
     private Image _riddleImage;
+    private Image _bombLocationImage;
     private TextField _defuseCodeField;
     private Button _verifyButton;
     private Button _abandonButton;
     
-    private VisualElement _defuseMenu;
-    private VisualElement _bombLoadMenu;
-    private VisualElement _progressMenu;
+    private MenuManager _menuManager;
     
     // Bomb Status
-    private Label _RIDDLE_NUMBER; //TODO: REMOVE
     private Label _attemptsLeftLabel;
+    private Label _pointsLabel;
     private Label _progressLabel;
     private Label _selectedBombName;
     
@@ -82,23 +83,32 @@ public class THManager : MonoBehaviour
     private int _riddleLoadIndex;
     private Color _normalBgTintColor;
     
+    // CLUE Menu
+    private Label _clueLabel;
+    private Button _riddlerClueButton;
+    private List<Button> _riddlerClueButtons = new List<Button>(6);
+    
     //Progress Menu 
     private Button _progressButton;
     private Label _progressInfoLabel;
     private List<ProgressMenuBombDisplay> _progressMenuBombs = new List<ProgressMenuBombDisplay>(6);
     
+    // TeamName Menu
+    private TextField _teamNameField;
+    private Label _teamNameInfoField;
+    private Button _teamNameVerifyButton;
+    private String _teamName;
+    
     // Save-Load Data
-    string SavePath => Path.Combine(Application.persistentDataPath, "ChE24THDO_NOT_TRY_TO_OPEN_BETA01.json");
+    private string SavePath => Path.Combine(Application.persistentDataPath, "RiddlersMayhem.json");
     
     void Start()
     {
-        _RIDDLE_NUMBER = Document.rootVisualElement.Q<Label>("RiddleNumber");
-            
         _bigRoot = Document.rootVisualElement.Query<VisualElement>("BigRoot");
         
         _bombDefusalCodes = new BombDefusalCodes();
         _bombDefusalCodes.LoadCodes();
-        _normalBgTintColor = new Color(0.1f, 0.1f, 0.1f, 1f);
+        _normalBgTintColor = new Color(0.03529412f, 0.03529412f, 0.03529412f, 1f);
         _bigRoot.style.unityBackgroundImageTintColor = _normalBgTintColor;
         
         _bombs.Add(new Bomb(0));
@@ -126,18 +136,24 @@ public class THManager : MonoBehaviour
             var key2 = shuffledIds[index++];
             bomb.AssignRiddles(key1, key2);
         }
+
+        _menuManager = new MenuManager();
+        _menuManager.Initialize(Document);
+        AudioManager.Init(_audioSource);
         
-        _defuseMenu = Document.rootVisualElement.Q<VisualElement>("DefuseMenu");
-        _bombLoadMenu = Document.rootVisualElement.Q<VisualElement>("BombLoadMenu");
-        _progressMenu = Document.rootVisualElement.Q<VisualElement>("ProgressMenu");
-        
+        _teamNameInfoField = Document.rootVisualElement.Q<Label>("TeamNameInfoField");
         _selectedBombName = Document.rootVisualElement.Q<Label>("SelectedBombName");
         _attemptsLeftLabel = Document.rootVisualElement.Q<Label>("AttemptsLeft");
+        _pointsLabel = Document.rootVisualElement.Q<Label>("Points");
         _progressLabel = Document.rootVisualElement.Q<Label>("Progress");
         _riddleImage = Document.rootVisualElement.Q<Image>("RiddleImage");
+        _bombLocationImage = Document.rootVisualElement.Q<Image>("BombLocationImage");
         _defuseCodeField = Document.rootVisualElement.Q<TextField>("DefuseCodeField"); 
         _verifyButton = Document.rootVisualElement.Q<Button>("VerifyButton");
         _abandonButton = Document.rootVisualElement.Q<Button>("AbandonButton"); 
+        
+        _teamNameVerifyButton = Document.rootVisualElement.Q<Button>("VerifyTeamNameButton");
+        _teamNameField = Document.rootVisualElement.Q<TextField>("TeamNameField");
 
         _progressInfoLabel = Document.rootVisualElement.Q<Label>("ProgressInfoLabel");
         _selectedBombForInitLabel = Document.rootVisualElement.Q<Label>("SelectedBombForInitiation");
@@ -145,28 +161,9 @@ public class THManager : MonoBehaviour
         _bombInitiationTextField = Document.rootVisualElement.Q<TextField>("BombInitCodeField");
         _progressButton = Document.rootVisualElement.Q<Button>("ProgressButton");
         _verifyBombInitCodeButton = Document.rootVisualElement.Q<Button>("VerifyInitCodeButton");
+        _riddlerClueButton = Document.rootVisualElement.Q<Button>("RiddlerClueButton");
+        _clueLabel = Document.rootVisualElement.Q<Label>("ClueLabel");    
         
-        _progressButton.clicked += OnProgressButtonClicked;
-        _verifyBombInitCodeButton.clicked += OnVerifyBombInitButtonClicked;
-        
-        _verifyButton.clicked += OnVerifyButtonClicked;
-        _abandonButton.clicked += () =>
-        {
-            _bombs[_selectedBomb].AbandonBomb();
-            InvalidateBombDisplay(_bombs[_selectedBomb]);
-        };
-        
-        // LoadSavedData (Override current data if new data exists)
-        Load();
-        
-        for (int i = 0; i < 6; i++)
-        {
-            int bombNumber = i;
-            _bombButtons[i] = Document.rootVisualElement.Q<Button>("Bomb" + (bombNumber+1));
-            _bombButtons[i].clicked += () => OnBombButtonClicked(bombNumber);
-            InvalidateBombDisplay(_bombs[bombNumber]);
-        }
-
         for(int i = 0; i < 6; i++)
         {
             _progressMenuBombs.Add(new ProgressMenuBombDisplay());
@@ -177,10 +174,91 @@ public class THManager : MonoBehaviour
             progressMenuBomb.Status = Document.rootVisualElement.Q<Label>("Status_" + (i + 1));
         }
         
-        _bombLoadMenu.style.display = DisplayStyle.None;
-        _defuseMenu.style.display = DisplayStyle.None;
-        _progressMenu.style.display = DisplayStyle.Flex;
-        OnProgressButtonClicked(); // Refresh the progress menu
+        for(int i = 0; i < 6; i++)
+        {
+            _riddlerClueButtons.Add(new Button());
+            _riddlerClueButtons[i] = Document.rootVisualElement.Q<Button>("CLUE_" + (i + 1));
+
+            switch (i)
+            {
+                case 0: _riddlerClueButtons[i].text = "#1 Arrogant Invitation"; break;
+                case 1: _riddlerClueButtons[i].text = "#2 Tease"; break;
+                case 2: _riddlerClueButtons[i].text = "#3 False Name"; break;
+                case 3: _riddlerClueButtons[i].text = "#4 Mask and Glasses"; break;
+                case 4: _riddlerClueButtons[i].text = "#5 Voice"; break;
+                case 5: _riddlerClueButtons[i].text = "#6 Challenge"; break;
+            }
+            
+            var ii = i;
+            _riddlerClueButtons[i].clicked += () =>
+            { 
+                Debug.Log("Clue Button " + (ii + 1) + " clicked");
+                AudioManager.PlayClue("Clue"+ (ii + 1));
+            };
+        }
+
+        _riddlerClueButton.clicked += OnClueButtonClicked;
+        _progressButton.clicked += OnProgressButtonClicked;
+        _verifyBombInitCodeButton.clicked += OnVerifyBombInitButtonClicked;
+        
+        _verifyButton.clicked += OnVerifyButtonClicked;
+        _abandonButton.clicked += () =>
+        {
+            _bombs[_selectedBomb].AbandonBomb();
+            InvalidateBombDisplay(_bombs[_selectedBomb]);
+        };
+
+        _teamNameInfoField.text = SavedDataExists() ? "ENTER YOUR TEAM NAME" : "REGISTER YOUR TEAM";
+        
+        _teamNameVerifyButton.clicked += () =>
+        {
+            bool isTeamNameValid = TeamManager.IsTeamNameValid(_teamNameField.text);
+            if (isTeamNameValid)
+            {
+                bool loadResult = Load();
+            
+                if (!loadResult)
+                {
+                    _menuManager.Show(MenuType.ProgressMenu);
+                    _teamName = _teamNameField.text;
+                    _progressButton.text = _teamNameField.text;
+                    FlashBGOnce(false);
+                    OnProgressButtonClicked(); // Refresh the progress menu
+                }
+                else
+                {
+                    Debug.Log("Stored Team Name: " + _teamName);
+                    if (_teamNameField.text != _teamName)
+                    {
+                        _menuManager.Show(MenuType.TeamNameMenu);
+                        FlashBGOnce(true);
+                        _teamNameInfoField.text = "Please put YOUR team name, not others!";
+                    }
+                    else
+                    {
+                        _menuManager.Show(MenuType.ProgressMenu);
+                        _teamName = _teamNameField.text;
+                        _progressButton.text = _teamNameField.text;
+                        FlashBGOnce(false);
+                        OnProgressButtonClicked(); // Refresh the progress menu
+                    }
+                }
+            }
+            else
+            {
+                _menuManager.Show(MenuType.TeamNameMenu);
+                _teamNameInfoField.text = "No team with name \"" + _teamNameField.text + "\" exists";
+                FlashBGOnce(true);
+            }
+        };
+        
+        for (int i = 0; i < 6; i++)
+        {
+            int bombNumber = i;
+            _bombButtons[i] = Document.rootVisualElement.Q<Button>("Bomb" + (bombNumber+1));
+            _bombButtons[i].clicked += () => OnBombButtonClicked(bombNumber);
+            InvalidateBombDisplay(_bombs[bombNumber]);
+        }
         
         // Only allow to verify when there is the 6 digit code
         _verifyButton.SetEnabled(false);
@@ -188,15 +266,36 @@ public class THManager : MonoBehaviour
         {
             _verifyButton.SetEnabled(evt.newValue.Length == 6);
         });
+
+        _menuManager.Show(MenuType.TeamNameMenu);
     }
 
+    private void OnClueButtonClicked()
+    {
+        _menuManager.Show(MenuType.RiddlerClueMenu);
+        int clueAmount = CalculateAmountOfClueToShow();
+
+        // Hide all clues
+        foreach (var btn in _riddlerClueButtons)
+            btn.style.display = DisplayStyle.None;
+         
+        if (clueAmount == 0)
+            _clueLabel.text = "Defuse bombs to get audio\nclues about Riddler!";
+        else
+            _clueLabel.text = "Put your device volume to Maximum\n while listening.You have to find\nwho is the Riddler based on these.";
+        
+        // Only activate on amount of Bomb Defused
+        for (int i = 0; i < clueAmount; i++)
+        {
+            _riddlerClueButtons[i].style.display = DisplayStyle.Flex;
+        }
+    }
+    
     void OnProgressButtonClicked()
     {
         // Show Progress Menu, Hide others
-        _progressMenu.style.display = DisplayStyle.Flex;
-        _bombLoadMenu.style.display = DisplayStyle.None;
-        _defuseMenu.style.display = DisplayStyle.None;
-
+        _menuManager.Show(MenuType.ProgressMenu);
+        
         int inactiveBombCount = 0;
         for(int i = 0; i < 6; i++)
         {
@@ -223,11 +322,12 @@ public class THManager : MonoBehaviour
 
         if (inactiveBombCount == 6)
         {
-            _progressInfoLabel.style.display = DisplayStyle.Flex;
-            _progressInfoLabel.text = "Nothing to see here yet!\nStart defusing bombs and comeback here\nto check your progress";
+            _progressInfoLabel.text = "Nothing to see here yet!\nStart defusing bombs & comeback here\nto check your progress";
         }
         else
-            _progressInfoLabel.style.display = DisplayStyle.None;
+        {
+            _progressInfoLabel.text = "Total Points: " + GetTotalPoints();
+        }
         
         HideMobileKeyboard();
     }
@@ -282,10 +382,10 @@ public class THManager : MonoBehaviour
             LoadRiddleImage(_riddleLoadIndex);
         }
         
-        HideMobileKeyboard();
         Save();
         InvalidateBombDisplay(defusingBomb);
         _defuseCodeField.value = "";
+        HideMobileKeyboard();
     }
     
     void OnBombButtonClicked(int bombNo)
@@ -308,66 +408,68 @@ public class THManager : MonoBehaviour
         {
             _bombInitStatusLabel.text = "";
             _selectedBombForInitLabel.text = "BOMB 0" + (bomb.GetBombNumber() + 1);
-            _bombLoadMenu.style.display = DisplayStyle.Flex;
-            _defuseMenu.style.display = DisplayStyle.None;
-            _progressMenu.style.display = DisplayStyle.None;
+            _bombLocationImage.image = Resources.Load<Texture2D>("Maps/BombLocationImage_" + (bomb.GetBombNumber() + 1));
+            _menuManager.Show(MenuType.BombLoadMenu);
             
             if (CanDefuseMoreBombs())
             {
-                _bombInitiationTextField.style.visibility = Visibility.Visible;
-                _verifyBombInitCodeButton.style.visibility = Visibility.Visible;
+                _bombInitiationTextField.style.display = DisplayStyle.Flex;
+                _verifyBombInitCodeButton.style.display = DisplayStyle.Flex;
             }
             else
             {
                 _bombInitStatusLabel.text = "You can not defuse more than 2 bombs at once.\nAbandon/Defuse one bomb to continue";
-                _bombInitiationTextField.style.visibility = Visibility.Hidden;
-                _verifyBombInitCodeButton.style.visibility = Visibility.Hidden;
+                _bombInitiationTextField.style.display = DisplayStyle.None;
+                _verifyBombInitCodeButton.style.display = DisplayStyle.None;
             }
         }
         else
         {
-            _progressMenu.style.display = DisplayStyle.None;
-            _bombLoadMenu.style.display = DisplayStyle.None;
-            _defuseMenu.style.display = DisplayStyle.Flex;
+            _menuManager.Show(MenuType.DefuseMenu);
             var bombSelectionButton = _bombButtons[bomb.GetBombNumber()];
-            
+
+            Color color = Bomb.BombStateToColor(bomb.GetBombState());
             if (bomb.GetBombState() == BombState.DEFUSING)
             {
-                bombSelectionButton.style.backgroundColor= Color.darkOrange;
-                _selectedBombName.style.color = Color.darkOrange;
+                bombSelectionButton.style.backgroundColor= color;
+                _selectedBombName.style.color = color;
                 _attemptsLeftLabel.text = "Attempts Left: " + bomb.GetRemainingAttemptCount();
+                _pointsLabel.text = "Points: " + bomb.GetPoints();
                 _progressLabel.text = "Progress: " + bomb.GetDefusingProgress() + "/3";
 
                 if (bomb.GetDefusingProgress() == 2)
                     _verifyButton.text = "DEFUSE";
                 else
                     _verifyButton.text = "VERIFY";
-
-                _RIDDLE_NUMBER.text = "Riddle Number: " + bomb.GetCurrentRiddleIndex() + " (DEV MODE ONLY)";
+                
                 LoadRiddleImage(bomb.GetCurrentRiddleIndex());
             }
             else if (bomb.GetBombState() == BombState.DEFUSED)
             {
-                bombSelectionButton.style.backgroundColor= Color.softGreen;
-                _selectedBombName.style.color = Color.softGreen;
+                
+                bombSelectionButton.style.backgroundColor= color;
+                _selectedBombName.style.color = color;
                 _attemptsLeftLabel.text = "Attempts Left: " + bomb.GetRemainingAttemptCount();
+                _pointsLabel.text = "Points: " + bomb.GetPoints();
                 _progressLabel.text = "Status: DEFUSED";
                 HideRiddleInput();
             }
             else if (bomb.GetBombState() == BombState.DETONATED)
             {
-                bombSelectionButton.style.backgroundColor= Color.red;
-                _selectedBombName.style.color = Color.red;
+                bombSelectionButton.style.backgroundColor= color;
+                _selectedBombName.style.color = color;
                 _attemptsLeftLabel.text = "Attempts Left: " + bomb.GetRemainingAttemptCount();
+                _pointsLabel.text = "Points: " + bomb.GetPoints();
                 _progressLabel.text = "Status: DETONATED";
                 HideRiddleInput();
             }
             else if (bomb.GetBombState() == BombState.ABANDONED)
             {
-                bombSelectionButton.style.backgroundColor= Color.softRed;
-                _selectedBombName.style.color = Color.softRed;
+                bombSelectionButton.style.backgroundColor= color;
+                _selectedBombName.style.color = color;
                 
                 _attemptsLeftLabel.text = "Attempts Left: " + bomb.GetRemainingAttemptCount();
+                _pointsLabel.text = "Points: " + bomb.GetPoints();
                 _progressLabel.text = "Status: ABANDONED";
                 HideRiddleInput();
             }
@@ -445,8 +547,10 @@ public class THManager : MonoBehaviour
     private void Save()
     {
         BombsSaveData save = new BombsSaveData();
+        
         save.bombs = new BombSaveData[_bombs.Count];
-
+        save.teamName = _teamNameField.text;
+        
         for (int i = 0; i < _bombs.Count; i++)
         {
             save.bombs[i] = _bombs[i].Serialize();
@@ -458,18 +562,30 @@ public class THManager : MonoBehaviour
 
         Debug.Log("Saved to: " + SavePath);
     }
-    
-    private void Load()
+
+    private bool SavedDataExists()
     {
         if (!File.Exists(SavePath))
         {
             Debug.Log("No save file");
-            return;
+            return false;
+        }
+        return true;
+    }
+    
+    private bool Load()
+    {
+        if (!File.Exists(SavePath))
+        {
+            Debug.Log("No save file");
+            return false;
         }
         
         string encrypted = File.ReadAllText(SavePath);
         string json = SaveCrypto.Decrypt(encrypted);
         BombsSaveData save =  JsonUtility.FromJson<BombsSaveData>(json);
+        
+        _teamName =  save.teamName;
         
         for (int i = 0; i < _bombs.Count; i++)
         {
@@ -479,14 +595,40 @@ public class THManager : MonoBehaviour
             Bomb newBomb = new Bomb(i);
             newBomb.Deserialize(save.bombs[i]);
             _bombs[i] = newBomb;
+            InvalidateBombDisplay(_bombs[i]);
         }
-
+        
         Debug.Log("Loaded bombs");
+        return true;
     }
 
+    private int GetTotalPoints()
+    {
+        int result = 0;
+        foreach (var bomb in _bombs)
+        {
+            result += bomb.GetPoints();
+        }
+
+        return result;
+    }
+    
     private void HideMobileKeyboard()
     {
         _bombInitiationTextField.Blur();
         _defuseCodeField.Blur();
+    }
+
+    private int CalculateAmountOfClueToShow()
+    {
+        int result = 0;
+
+        foreach (Bomb bomb in _bombs)
+        {
+            if (bomb.GetBombState() == BombState.DEFUSED)
+                result++;
+        }
+        
+        return result;
     }
 }

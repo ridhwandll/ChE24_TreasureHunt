@@ -1,10 +1,13 @@
 fileFormatVersion: 2
-guid: 33bb1ef6dce12fe47a24fb42b173538f
+guid: 81b5759896e3ff547ad34e2682a4a9cd
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -1045133410153605164
-    second: 26_0
+      213: 2242078786010256835
+    second: icon432_fg_0
+  - first:
+      213: -6708520528349681032
+    second: icon432_fg_1
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +129,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 26_0
+      name: icon432_fg_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 670
-        height: 670
+        width: 136
+        height: 207
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +144,30 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 4d7d6e863b0fe71f0800000000000000
-      internalID: -1045133410153605164
+      spriteID: 3c5949ed6c67d1f10800000000000000
+      internalID: 2242078786010256835
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: icon432_fg_1
+      rect:
+        serializedVersion: 2
+        x: 149
+        y: 0
+        width: 195
+        height: 207
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 87a2d4b6f1c86e2a0800000000000000
+      internalID: -6708520528349681032
       vertices: []
       indices: 
       edges: []
@@ -161,7 +186,8 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      26_0: -1045133410153605164
+      icon432_fg_0: 2242078786010256835
+      icon432_fg_1: -6708520528349681032
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

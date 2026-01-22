@@ -24,10 +24,12 @@ public class BombSaveData
     public long endTimeTicks;
     public int riddleKey1;
     public int riddleKey2;
+    public int points;
 }
 
 public class Bomb
 {
+    private int _points;
     private BombState _bombState; 
     private int _bombNumber;
     private Dictionary<int, String> _riddles;
@@ -38,6 +40,7 @@ public class Bomb
     
     public Bomb(int bombNumber)
     {
+        _points = 0;
         _attemptsLeft = 8;
         _defusingProgress = 0;
         _bombNumber = bombNumber;
@@ -54,9 +57,13 @@ public class Bomb
         _riddles[riddle1.Key] = riddle1.Value;
         _riddles[riddle2.Key] = riddle2.Value;
         _riddles[hardRiddle.Key] = hardRiddle.Value;
-        Debug.LogError("BOMB NUMBER #" + _bombNumber +"\n Riddle01: " + riddle1 +"\n Riddle02: " + riddle2 +"\n Riddle03: "+ hardRiddle);
+        //Debug.LogError("BOMB NUMBER #" + _bombNumber +"\n Riddle01: " + riddle1 +"\n Riddle02: " + riddle2 +"\n Riddle03: "+ hardRiddle);
     }
-    
+
+    public string GetRiddleAnswer(int riddleIndex)
+    {
+        return _riddles[riddleIndex];
+    }
     
     public void MarkAsDefusing()
     {
@@ -71,6 +78,9 @@ public class Bomb
 
     public void AbandonBomb()
     {
+        if (_attemptsLeft <= 3)
+            _points -= 5;
+            
         _bombState = BombState.ABANDONED;
         _endTime = DateTime.Now;
     }
@@ -78,6 +88,20 @@ public class Bomb
     public int GetBombNumber()
     {
         return _bombNumber;
+    }
+
+    private int CheckAttemptsLeft()
+    {
+        if (_attemptsLeft <= 0)
+        {
+            _points -= 15;
+            _bombState = BombState.DETONATED;
+            _endTime = DateTime.Now;
+            Debug.Log("Bomb Detonated");
+            return -68;
+        }
+
+        return 0;
     }
     
     // Returns the ID of the next image to load, -69 if wrong code
@@ -87,18 +111,11 @@ public class Bomb
         {
             _attemptsLeft--;
             
-            if (_attemptsLeft <= 0)
-            {
-                _bombState = BombState.DETONATED;
-                _endTime = DateTime.Now;
-                Debug.Log("Bomb Detonated");
-                return -68;
-            }
-            
             KeyValuePair<int, String> currentRiddle = _riddles.ElementAt(_defusingProgress);
             if (defuseCode == currentRiddle.Value)
             {
                 _defusingProgress += 1;
+                _points += 5; // For Solving a Riddle
                 Debug.Log("Bomb defusing progress: " + _defusingProgress + "/3");
                 if (_defusingProgress < 3)
                     return _riddles.ElementAt(_defusingProgress).Key;
@@ -106,8 +123,16 @@ public class Bomb
                 {
                     _endTime = DateTime.Now;
                     _bombState = BombState.DEFUSED;
+                    _points += 10;
+                    _points += _attemptsLeft;
                     return -67;
                 }
+            }
+            else
+            {
+                int result = CheckAttemptsLeft();
+                if (result == -68)
+                    return result; // Out of attempts
             }
         }
         else
@@ -116,6 +141,11 @@ public class Bomb
         return -69;
     }
 
+    public int GetPoints()
+    {
+        return _points;
+    }
+    
     public String GetTotalDefusingTimeString()
     {
         // If Bomb is detonated/abandoned/defused only then return total time elapsed
@@ -125,7 +155,7 @@ public class Bomb
             string result = elapsed.TotalMinutes.ToString("F2") + " minutes";
             return result;
         }
-        return ".... minutes";
+        return "... minutes";
     }
     
     public int GetCurrentRiddleIndex()
@@ -157,6 +187,7 @@ public class Bomb
             attemptsLeft = _attemptsLeft,
             startTimeTicks = _startTime.Ticks,
             endTimeTicks = _endTime.Ticks,
+            points = _points,
             
             //Save only 1st 2 riddles, 3rd one is fixed
             riddleKey1 = _riddles.ElementAt(0).Key,
@@ -166,6 +197,7 @@ public class Bomb
     
     public void Deserialize(BombSaveData data)
     {
+        _points = data.points;
         _bombState = data.bombState;
         _bombNumber = data.bombNumber;
         _defusingProgress = data.defusingProgress;
@@ -204,13 +236,13 @@ public class Bomb
             case BombState.NOT_DEFUSING:
                 return Color.antiqueWhite;
             case BombState.ABANDONED:
-                return Color.softRed;
+                return Color.gray5;
             case BombState.DEFUSED:
                 return Color.softGreen;
             case BombState.DEFUSING:
                 return Color.darkOrange;
             case BombState.DETONATED:
-                return Color.red;
+                return Color.softRed;
         }
         return Color.antiqueWhite;
     }
